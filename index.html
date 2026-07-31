@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#4c1d95">
+  <meta name="description" content="今日の運勢、相性、名前、おみくじ、3枚タロットを楽しめる占いWebアプリ">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <title>星しずく占い＋</title>
+</head>
+<body>
+  <div class="sky" aria-hidden="true"></div>
+  <header class="hero">
+    <div><p class="eyebrow">FORTUNE COLLECTION</p><h1>星しずく占い＋</h1><p>今日の気持ちに寄り添う、5つの占い。</p></div>
+    <button id="themeBtn" class="icon-btn" aria-label="表示モード切替">🌙</button>
+  </header>
+
+  <nav class="tabs" aria-label="占いメニュー">
+    <button class="tab active" data-tab="daily">今日</button>
+    <button class="tab" data-tab="compat">相性</button>
+    <button class="tab" data-tab="name">名前</button>
+    <button class="tab" data-tab="tarot">タロット</button>
+    <button class="tab" data-tab="omikuji">おみくじ</button>
+  </nav>
+
+  <main>
+    <section id="daily" class="panel active">
+      <article class="glass">
+        <div class="title-row"><div><p class="eyebrow">DAILY FORTUNE</p><h2>今日の運勢</h2></div><span id="todayLabel" class="chip"></span></div>
+        <div class="form-grid">
+          <label>お名前<input id="nameInput" maxlength="20" placeholder="例：しなもん"></label>
+          <label>生年月日<input id="birthdayInput" type="date"></label>
+          <label>血液型<select id="bloodInput"><option value="">選択しない</option><option>A型</option><option>B型</option><option>O型</option><option>AB型</option></select></label>
+          <label>相談テーマ<select id="themeInput"><option>総合運</option><option>恋愛運</option><option>仕事運</option><option>金運</option><option>健康運</option></select></label>
+        </div>
+        <button id="fortuneBtn" class="primary">今日の運勢を占う</button>
+      </article>
+      <article id="dailyResult" class="glass result hidden" aria-live="polite">
+        <div class="result-top"><div><p class="eyebrow">TODAY'S MESSAGE</p><h2 id="resultTitle"></h2></div><div id="scoreRing" class="score-ring"><strong id="scoreValue"></strong><small>点</small></div></div>
+        <div id="rankBadge" class="rank"></div><p id="mainMessage" class="message"></p>
+        <div class="meters" id="meters"></div>
+        <div class="lucky-grid"><div><span>カラー</span><b id="luckyColor"></b></div><div><span>アイテム</span><b id="luckyItem"></b></div><div><span>数字</span><b id="luckyNumber"></b></div><div><span>時間</span><b id="luckyTime"></b></div></div>
+        <div class="advice"><span>今日の開運アクション</span><p id="actionText"></p></div>
+        <div class="button-row"><button id="shareBtn" class="secondary">結果をシェア</button><button id="favoriteBtn" class="secondary">♡ お気に入り</button></div>
+      </article>
+    </section>
+
+    <section id="compat" class="panel">
+      <article class="glass"><p class="eyebrow">COMPATIBILITY</p><h2>ふたりの相性占い</h2><div class="form-grid two"><label>あなたの名前<input id="myName" maxlength="20"></label><label>相手の名前<input id="partnerName" maxlength="20"></label><label>あなたの誕生日<input id="myBirth" type="date"></label><label>相手の誕生日<input id="partnerBirth" type="date"></label></div><button id="compatBtn" class="primary">ふたりの相性を占う</button></article>
+      <article id="compatResult" class="glass result hidden"><div class="big-symbol">💞</div><h2 id="compatTitle"></h2><div class="compat-score"><strong id="compatScore"></strong><span>%</span></div><p id="compatMessage" class="message"></p><div class="advice"><span>仲を深めるヒント</span><p id="compatAdvice"></p></div></article>
+    </section>
+
+    <section id="name" class="panel">
+      <article class="glass"><p class="eyebrow">NAME FORTUNE</p><h2>名前占い</h2><label>占いたい名前<input id="nameFortuneInput" maxlength="24" placeholder="漢字・ひらがな・カタカナ対応"></label><button id="nameBtn" class="primary">名前から運勢を見る</button></article>
+      <article id="nameResult" class="glass result hidden"><div class="big-symbol" id="nameSymbol">✦</div><h2 id="nameTitle"></h2><p id="nameMessage" class="message"></p><div id="nameTraits" class="trait-list"></div></article>
+    </section>
+
+    <section id="tarot" class="panel">
+      <article class="glass"><p class="eyebrow">THREE CARD TAROT</p><h2>3枚タロット</h2><p class="sub">質問を心に思い浮かべて、カードをめくってください。過去・現在・未来を読み解きます。</p><div id="tarotCards" class="tarot-cards"></div><button id="resetTarotBtn" class="secondary full">カードをシャッフル</button></article>
+      <article id="tarotSummary" class="glass result hidden"><h2>カードからの総合メッセージ</h2><p id="tarotSummaryText" class="message"></p></article>
+    </section>
+
+    <section id="omikuji" class="panel">
+      <article class="glass center"><p class="eyebrow">LUCKY DRAW</p><h2>星のおみくじ</h2><div id="omikujiBox" class="omikuji-box">✦</div><button id="omikujiBtn" class="primary">おみくじを引く</button></article>
+      <article id="omikujiResult" class="glass result hidden center"><div id="omikujiRank" class="omikuji-rank"></div><p id="omikujiMessage" class="message"></p><div id="omikujiDetails" class="detail-grid"></div></article>
+    </section>
+
+    <section class="glass history"><div class="title-row"><div><p class="eyebrow">HISTORY & FAVORITES</p><h2>占い履歴</h2></div><button id="clearBtn" class="text-btn">すべて消去</button></div><div id="historyList"></div></section>
+  </main>
+  <footer>※占い結果は娯楽を目的としたものです。重要な判断は専門家へご相談ください。</footer>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="app.js"></script>
+</body>
+</html>
