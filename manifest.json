@@ -1,16 +1,15 @@
 {
-  "name": "星しずく占い Ver2.0",
+  "name": "星しずく占い Ver3.0",
   "short_name": "星しずく占い",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#0c0820",
-  "theme_color": "#130d2b",
+  "background_color": "#120c2b",
+  "theme_color": "#24134f",
   "icons": [
     {
       "src": "icon.svg",
       "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "type": "image/svg+xml"
     }
   ]
 }

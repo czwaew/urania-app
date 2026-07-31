@@ -1,45 +1,128 @@
-const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-const navItems=[['home','🏠 ホーム'],['ai','🤖 AI占い'],['tarot','🎴 タロット'],['zodiac','♈ 星座'],['birthday','🎂 生年月日'],['name','📝 姓名判断'],['love','💕 相性'],['mypage','👤 マイページ'],['shop','💰 ショップ']];
-const S={get:(k,d)=>JSON.parse(localStorage.getItem('uranai_'+k)||JSON.stringify(d)),set:(k,v)=>localStorage.setItem('uranai_'+k,JSON.stringify(v))};
-let state={points:S.get('points',0),tickets:S.get('tickets',0),streak:S.get('streak',0),history:S.get('history',[]),favorites:S.get('favorites',[]),profile:S.get('profile',null),premium:S.get('premium',false),missions:S.get('missions',{})};
-const seeded=s=>{let h=2166136261;for(const c of s)h=Math.imul(h^c.charCodeAt(0),16777619);return()=>((h=Math.imul(h^(h>>>15),2246822507))>>>0)/4294967296};
-const today=()=>new Date().toISOString().slice(0,10);const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-function save(){Object.entries(state).forEach(([k,v])=>S.set(k,v));renderStats();renderMypage();}
-function addHistory(type,title,text){state.history.unshift({type,title,text,date:new Date().toLocaleString('ja-JP')});state.history=state.history.slice(0,50);mission('fortune');save();}
-function mission(k){state.missions[today()]??={fortune:false,tarot:false,ai:false};if(!state.missions[today()][k]){state.missions[today()][k]=true;state.points+=10;burst();}renderMissions();}
-function burst(){for(let i=0;i<14;i++){let p=document.createElement('i');p.className='particle';p.textContent='✨';p.style.left='50%';p.style.top='45%';p.style.setProperty('--x',(Math.random()*300-150)+'px');p.style.setProperty('--y',(Math.random()*300-150)+'px');$('#particles').append(p);setTimeout(()=>p.remove(),900)}beep();}
-function beep(){if(!S.get('sound',true))return;let a=new AudioContext(),o=a.createOscillator(),g=a.createGain();o.connect(g);g.connect(a.destination);o.frequency.value=660;g.gain.setValueAtTime(.05,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.2);o.start();o.stop(a.currentTime+.2)}
-function show(id){$$('.page').forEach(x=>x.classList.toggle('active',x.id===id));$$('#nav button').forEach(x=>x.classList.toggle('active',x.dataset.go===id));scrollTo({top:0,behavior:'smooth'});if(id==='catalog')renderCatalog();}
-$('#nav').innerHTML=navItems.map(([id,t])=>`<button data-go="${id}">${t}</button>`).join('');$$('[data-go]').forEach(b=>b.onclick=()=>show(b.dataset.go));show('home');
-$('#themeBtn').onclick=()=>{document.body.classList.toggle('light');S.set('light',document.body.classList.contains('light'))};if(S.get('light',false))document.body.classList.add('light');
-$('#soundBtn').onclick=()=>{let v=!S.get('sound',true);S.set('sound',v);$('#soundBtn').textContent=v?'🔊 効果音':'🔇 ミュート'};
-function renderStats(){$('#points').textContent=state.points;$('#streak').textContent=state.streak+'日';$('#tickets').textContent=state.tickets;}
-function renderMissions(){let m=state.missions[today()]||{};$('#missions').innerHTML=[['fortune','占いを1回する'],['tarot','タロットを引く'],['ai','AI占いに相談']].map(([k,t])=>`<div class="mission"><span>${m[k]?'✅':'⬜'} ${t}</span><b>+10pt</b></div>`).join('');}
-$('#bonusBtn').onclick=()=>{let last=S.get('lastLogin','');if(last===today())return;let y=new Date();y.setDate(y.getDate()-1);state.streak=last===y.toISOString().slice(0,10)?state.streak+1:1;state.points+=30;state.tickets+=state.streak%7===0?1:0;S.set('lastLogin',today());$('#bonusMsg').textContent='30ポイントを獲得しました！';$('#bonusBtn').disabled=true;save();burst()};if(S.get('lastLogin','')===today()){$('#bonusMsg').textContent='本日のボーナスは受取済みです。';$('#bonusBtn').disabled=true}
-// AI demo
-function aiAnswer(cat,q){let r=seeded(cat+q+today()),tone=['焦らず、小さな一歩を選びましょう。','本音を丁寧に言葉にすると流れが変わります。','今は結果を急がず、土台を整える時です。','あなたの直感には、すでに答えの種があります。'][Math.floor(r()*4)];return `【${cat}のメッセージ】\n${tone}\n\n「${q||'今日の流れ'}」については、できること・変えられないことを分けて考えると心が軽くなります。今日できる具体的な行動を一つだけ決めてください。\n\n※これは占いとしての助言です。医療・法律・投資など重要な判断は専門家にご相談ください。`}
-function renderChat(){let c=S.get('chat',[]);$('#chat').innerHTML=c.length?c.map(x=>`<div class="bubble ${x.role}">${esc(x.text)}</div>`).join(''):'<div class="bubble ai">こんにちは。恋愛・仕事・人間関係など、今気になっていることを聞かせてください。</div>';$('#chat').scrollTop=99999}
-$('#aiSend').onclick=()=>{let q=$('#aiInput').value.trim(),cat=$('#aiCategory').value;if(!q&&cat!=='今日のアドバイス')return alert('相談内容を入力してください');let c=S.get('chat',[]);c.push({role:'user',text:q||'今日のアドバイスをください'});c.push({role:'ai',text:aiAnswer(cat,q)});S.set('chat',c.slice(-30));$('#aiInput').value='';renderChat();mission('ai');addHistory('AI占い',cat,aiAnswer(cat,q).slice(0,90))};$('#clearChat').onclick=()=>{S.set('chat',[]);renderChat()};renderChat();
-// tarot
-let tarotMode='one';$$('#tarotTabs button').forEach(b=>b.onclick=()=>{$$('#tarotTabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');tarotMode=b.dataset.mode});
-const positions={one:['今のあなたへ'],three:['過去','現在','未来'],celtic:['現状','障害','顕在意識','潜在意識','過去','近い未来','自分自身','周囲','願望・恐れ','最終結果']};
-$('#drawTarot').onclick=()=>{let n=positions[tarotMode].length,deck=[...TAROT_CARDS].sort(()=>Math.random()-.5).slice(0,n);$('#tarotResult').innerHTML=deck.map((c,i)=>{let rev=Math.random()<.35;return `<article class="tarot-card"><div class="tarot-inner"><div class="tarot-face tarot-front ${rev?'reversed':''}"><div>${positions[tarotMode][i]}</div><div class="symbol">${c.symbol}</div><h4>${c.name}</h4><b>${rev?'逆位置':'正位置'}</b><p>${rev?c.reversed:c.upright}</p><button onclick="favoriteCard(${c.id})">☆ お気に入り</button></div></div></article>`}).join('');mission('tarot');addHistory('タロット',tarotMode,deck.map(x=>x.name).join('・'));burst()};
-window.favoriteCard=id=>{let c=TAROT_CARDS.find(x=>x.id===id);if(!state.favorites.some(x=>x.id===id))state.favorites.push(c);save();alert('お気に入りに保存しました')};
-function renderCatalog(){let q=$('#cardSearch').value||'';$('#catalogGrid').innerHTML=TAROT_CARDS.filter(c=>c.name.includes(q)).map(c=>`<article class="card"><div style="font-size:35px">${c.symbol}</div><b>${c.name}</b><small>${c.arcana}</small><p>正：${c.upright}</p><p>逆：${c.reversed}</p></article>`).join('')}$('#cardSearch').oninput=renderCatalog;
-// zodiac
-const signs=['牡羊座','牡牛座','双子座','蟹座','獅子座','乙女座','天秤座','蠍座','射手座','山羊座','水瓶座','魚座'];$('#zodiacSelect').innerHTML=signs.map(x=>`<option>${x}</option>`).join('');
-$('#zodiacBtn').onclick=()=>{let s=$('#zodiacSelect').value,p=$('#zodiacPeriod').value,r=seeded(s+p+today()),score=60+Math.floor(r()*40),colors=['紫','青','桃色','金','白','緑'],items=['小さな鏡','温かい飲み物','新しいノート','腕時計','花','お気に入りの音楽'];let text=`${s}の${p==='today'?'今日':p==='week'?'週間':'月間'}運勢は${score}点。周囲との調和を意識すると、思いがけない助けが入りそうです。`;$('#zodiacResult').innerHTML=`<div class="card result"><div class="score">${score}</div><h3>${text}</h3><div class="result-grid"><div>🎨 ラッキーカラー<br><b>${colors[Math.floor(r()*colors.length)]}</b></div><div>🎁 アイテム<br><b>${items[Math.floor(r()*items.length)]}</b></div><div>🔢 ナンバー<br><b>${1+Math.floor(r()*9)}</b></div></div></div>`;addHistory('星座占い',s,text)};
-// birthday
-function digitSum(n){while(n>9)n=String(n).split('').reduce((a,b)=>a+ +b,0);return n}$('#birthBtn').onclick=()=>{let d=$('#birthDate').value;if(!d)return alert('生年月日を入力してください');let nums=d.replaceAll('-','').split('').reduce((a,b)=>a+ +b,0),life=digitSum(nums),year=+d.slice(0,4),nine=11-(year.toString().split('').reduce((a,b)=>a+ +b,0)%9);if(nine>9)nine-=9;let traits=['','自立心と行動力','調和と共感','表現力と創造性','安定と努力','自由と変化','愛情と責任','探究心と精神性','現実力と達成','包容力と理想'];let text=`ライフパス${life}：${traits[life]||'独自の感性と変化を生む力'}。あなたは経験から学び、自分らしい答えを育てるタイプです。`;$('#birthResult').innerHTML=`<div class="card result"><div class="result-grid"><div><small>数秘術</small><div class="score">${life}</div><b>ライフパス</b></div><div><small>九星気学（簡易）</small><div class="score">${nine}</div><b>${nine}の気質</b></div></div><h3>${text}</h3><p>誕生日占い：今日は「整理してから動く」が開運テーマです。</p></div>`;addHistory('生年月日占い',d,text)};
-// name
-const strokes=s=>[...s].reduce((a,c)=>a+(c.codePointAt(0)%12+1),0);$('#nameBtn').onclick=()=>{let l=$('#lastName').value.trim(),f=$('#firstName').value.trim();if(!l||!f)return alert('姓と名を入力してください');let ten=strokes(l),chi=strokes(f),jin=(strokes(l.slice(-1))+strokes(f[0])),sou=ten+chi,gai=Math.max(1,sou-jin),score=55+(sou*7%46);let text=`${l}${f}さんは、柔軟さと粘り強さを併せ持つ運勢です。総格${sou}は、経験を重ねるほど評価が高まりやすい傾向を示します。`;$('#nameResult').innerHTML=`<div class="card result"><div class="score">${score}点</div><div class="result-grid"><div>天格<b>${ten}</b></div><div>人格<b>${jin}</b></div><div>地格<b>${chi}</b></div><div>外格<b>${gai}</b></div><div>総格<b>${sou}</b></div></div><h3>${text}</h3></div>`;addHistory('姓名判断',l+f,text)};
-// love
-$('#loveBtn').onclick=()=>{let a=$('#youName').value.trim(),b=$('#partnerName').value.trim(),ad=$('#youBirth').value,bd=$('#partnerBirth').value;if(!a||!b||!ad||!bd)return alert('お二人の名前と生年月日を入力してください');let r=seeded([a,b,ad,bd].sort().join('')),love=55+Math.floor(r()*46),marriage=Math.max(40,Math.min(99,love-8+Math.floor(r()*17))),friend=Math.max(40,Math.min(99,love-6+Math.floor(r()*20)));let comment=love>=85?'強いご縁を感じる組み合わせ。感謝を言葉にするほど関係が深まります。':love>=70?'穏やかに育つ相性です。違いを面白がることが鍵になります。':'ペースの違いを尊重すると魅力が引き出される関係です。';$('#loveResult').innerHTML=`<div class="card result"><div class="score">${love}%</div><h3>${a}さん × ${b}さん</h3><p>${comment}</p><div class="result-grid"><div>💍 結婚相性<br><b>${marriage}%</b></div><div>🤝 友達相性<br><b>${friend}%</b></div></div><p><b>AIコメント：</b>${aiAnswer('恋愛相性',a+'と'+b).split('\n')[1]}</p></div>`;addHistory('恋愛相性',a+'×'+b,comment)};
-// mypage
-function renderMypage(){let logged=!!state.profile;$('#loginPanel').classList.toggle('hidden',logged);$('#profilePanel').classList.toggle('hidden',!logged);$('#premiumBadge').classList.toggle('hidden',!state.premium);if(logged){$('#profileName').textContent=state.profile.name;$('#profileInfo').textContent=state.profile.provider+' ログイン（デモ）';$('#favorites').innerHTML=state.favorites.length?state.favorites.map(x=>`<div class="fav-item"><span>${x.symbol} ${x.name}</span><button onclick="removeFav(${x.id})">削除</button></div>`).join(''):'まだありません。';$('#history').innerHTML=state.history.length?state.history.slice(0,15).map(x=>`<div class="history-item"><span><b>${x.type}</b><br><small>${x.date}</small></span><span>${esc(x.title)}</span></div>`).join(''):'まだありません。';let users=[['あなた',state.points],['月夜のミナ',420],['星読みソラ',355],['ルナ',290]].sort((a,b)=>b[1]-a[1]);$('#ranking').innerHTML=users.map(x=>`<li>${x[0]} — ${x[1]}pt</li>`).join('');let done=Object.values(state.missions).filter(m=>Object.values(m).some(Boolean)).length;$('#badges').innerHTML=[['🌱','はじめの一歩',state.history.length>0],['🎴','カードの友',state.history.filter(x=>x.type==='タロット').length>=3],['🔥','継続の星',state.streak>=3],['💎','占いマスター',state.history.length>=10],['👑','プレミアム',state.premium]].map(([i,t,on])=>`<span style="opacity:${on?1:.3}">${i} ${t}</span>`).join('')}}}
-$$('.social').forEach(b=>b.onclick=()=>{state.profile={name:b.dataset.provider+'ユーザー',provider:b.dataset.provider};save()});$('#logoutBtn').onclick=()=>{state.profile=null;save()};$('#saveProfile').onclick=()=>{let n=$('#profileInput').value.trim();if(n){state.profile.name=n;save()}};window.removeFav=id=>{state.favorites=state.favorites.filter(x=>x.id!==id);save()};
-// shop demo
-$$('.buy').forEach(b=>b.onclick=()=>{if(b.dataset.item==='premium'){state.premium=true;$('#adSlot').classList.add('hidden')}else if(b.dataset.item==='ai10')state.points+=100;else state.tickets+=5;save();alert('デモ購入が完了しました。本番決済にはStripe設定が必要です。')});
-// star canvas
-const cv=$('#stars'),ctx=cv.getContext('2d');let stars=[];function resize(){cv.width=innerWidth;cv.height=innerHeight;stars=[...Array(90)].map(()=>({x:Math.random()*cv.width,y:Math.random()*cv.height,r:Math.random()*1.8,s:Math.random()*.25+.05}))}function anim(){ctx.clearRect(0,0,cv.width,cv.height);ctx.fillStyle='white';stars.forEach(s=>{s.y+=s.s;if(s.y>cv.height)s.y=0;ctx.globalAlpha=.25+Math.random()*.6;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,7);ctx.fill()});requestAnimationFrame(anim)}addEventListener('resize',resize);resize();anim();
-renderStats();renderMissions();renderMypage();if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
+
+const $ = (s)=>document.querySelector(s);
+const $$ = (s)=>[...document.querySelectorAll(s)];
+const store = {
+  get(k,d){try{return JSON.parse(localStorage.getItem(k)) ?? d}catch{return d}},
+  set(k,v){localStorage.setItem(k,JSON.stringify(v))}
+};
+let points = store.get("points",120);
+let history = store.get("history",[]);
+const zodiac = ["牡羊座","牡牛座","双子座","蟹座","獅子座","乙女座","天秤座","蠍座","射手座","山羊座","水瓶座","魚座"];
+const colors=["紫","ピンク","青","金","白","緑","赤"];
+const items=["手帳","ハンカチ","腕時計","温かい飲み物","お気に入りの音楽","小さな鏡","新しいペン"];
+const advice=[
+"小さな一歩が流れを変えます。","急がず、目の前のことを丁寧に。","本音を言葉にすると道が開けます。",
+"新しい情報に触れると好機が見つかります。","休息を取ることで判断力が戻ります。","身近な人への感謝が運気を整えます。"
+];
+
+function hash(str){let h=2166136261;for(const c of str){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return Math.abs(h)}
+function pick(arr,seed){return arr[seed%arr.length]}
+function today(){return new Date().toISOString().slice(0,10)}
+function updateStatus(){
+  $("#pointDisplay").textContent=points;
+  const streak=store.get("streak",0); $("#streakDisplay").textContent=streak+"日";
+}
+function saveHistory(type,text){
+  history.unshift({date:new Date().toLocaleString("ja-JP"),type,text});
+  history=history.slice(0,30);store.set("history",history);renderHistory();
+}
+function spend(n){
+  if(points<n){alert("ポイントが足りません。マイページでログインボーナスを受け取ってください。");return false}
+  points-=n;store.set("points",points);updateStatus();return true
+}
+
+$$("[data-view]").forEach(b=>b.onclick=()=>{
+  $$(".view").forEach(v=>v.classList.add("hidden"));
+  $("#view-"+b.dataset.view).classList.remove("hidden");
+  window.scrollTo({top:180,behavior:"smooth"});
+});
+
+$("#themeBtn").onclick=()=>{
+  document.body.classList.toggle("light");
+  store.set("light",document.body.classList.contains("light"));
+};
+if(store.get("light",false))document.body.classList.add("light");
+
+function aiResponse(q){
+  const seed=hash(q+today()), topic=q.includes("恋")?"恋愛":q.includes("仕事")?"仕事":q.includes("人")?"人間関係":"これから";
+  return `${topic}について見ると、今は「${pick(["整える","伝える","待つ","選び直す","一歩踏み出す"],seed)}」ことが鍵です。${pick(advice,seed+2)} すぐに結論を出すより、今日できる具体的な行動を一つ決めてみてください。`;
+}
+function addMsg(text,who){
+  const d=document.createElement("div");d.className="msg "+who;d.textContent=text;$("#chatLog").append(d);$("#chatLog").scrollTop=99999;
+}
+addMsg("こんにちは。恋愛・仕事・人間関係など、気になることをお話しください。","ai");
+$("#chatForm").onsubmit=e=>{
+  e.preventDefault();const q=$("#chatInput").value.trim();if(!q||!spend(10))return;
+  addMsg(q,"user");$("#chatInput").value="";
+  setTimeout(()=>{const a=aiResponse(q);addMsg(a,"ai");saveHistory("AI占い",q+" → "+a)},450);
+};
+
+function drawTarot(n){
+  if(!spend(n===10?30:n===3?15:5))return;
+  const used=new Set(), result=[];
+  while(result.length<n){const i=Math.floor(Math.random()*TAROT_CARDS.length);if(!used.has(i)){used.add(i);result.push({...TAROT_CARDS[i],rev:Math.random()<.35})}}
+  $("#tarotResult").innerHTML=result.map((c,i)=>`
+    <article class="tarot-card"><div class="tarot-inner"><div class="tarot-face ${c.rev?"reversed":""}">
+      <div class="symbol">${c.symbol}</div><h3>${c.name}</h3><strong>${c.rev?"逆位置":"正位置"}</strong>
+      <p>${c.rev?c.reversed:c.upright}</p>
+    </div></div></article>`).join("");
+  saveHistory("タロット",result.map(c=>`${c.name}（${c.rev?"逆":"正"}）`).join("・"));
+}
+$$("[data-draw]").forEach(b=>b.onclick=()=>drawTarot(Number(b.dataset.draw)));
+$("#tarotLibrary").innerHTML=TAROT_CARDS.map(c=>`<div><strong>${c.symbol} ${c.name}</strong><br><small>正：${c.upright}<br>逆：${c.reversed}</small></div>`).join("");
+
+zodiac.forEach(z=>$("#zodiacSelect").insertAdjacentHTML("beforeend",`<option>${z}</option>`));
+$("#zodiacForm").onsubmit=e=>{
+  e.preventDefault();const z=$("#zodiacSelect").value,p=$("#zodiacPeriod").value,s=hash(z+p+today());
+  const score=65+s%35, text=`<h3>${z}・${p}運勢：${score}点</h3>
+  <p>${pick(advice,s)}</p><p>ラッキーカラー：<b>${pick(colors,s+1)}</b><br>
+  ラッキーアイテム：<b>${pick(items,s+2)}</b><br>ラッキーナンバー：<b>${1+s%9}</b></p>`;
+  $("#zodiacResult").innerHTML=text;saveHistory("星座占い",`${z} ${p} ${score}点`);
+};
+
+$("#nameForm").onsubmit=e=>{
+  e.preventDefault();const n=$("#fullName").value.trim(),s=hash(n),total=[...n.replace(/\s/g,"")].reduce((a,c)=>a+c.charCodeAt(0)%10+1,0);
+  const text=`<h3>${n}さんの姓名判断</h3><p>天格：${8+s%25}　人格：${7+(s>>2)%25}　地格：${6+(s>>4)%25}<br>
+  外格：${5+(s>>6)%25}　総格：${total}</p><p>${pick(advice,s)} 周囲との調和を意識すると魅力がより伝わります。</p>`;
+  $("#nameResult").innerHTML=text;saveHistory("姓名判断",`${n}・総格${total}`);
+};
+
+$("#birthdayForm").onsubmit=e=>{
+  e.preventDefault();const v=$("#birthday").value;if(!v)return;
+  let num=v.replaceAll("-","").split("").reduce((a,b)=>a+Number(b),0);while(num>9)num=String(num).split("").reduce((a,b)=>a+Number(b),0);
+  const types=["開拓者","調整役","表現者","努力家","自由人","愛情家","探究者","実務家","理想家"];
+  const text=`<h3>ライフパスナンバー：${num}</h3><p>あなたは「${types[num-1]}」タイプです。</p><p>${pick(advice,hash(v))}</p>`;
+  $("#birthdayResult").innerHTML=text;saveHistory("生年月日占い",`${v}・ナンバー${num}`);
+};
+
+function renderHistory(){
+  $("#historyList").innerHTML=history.length?history.map(h=>`<div><strong>${h.type}</strong><br><small>${h.date}</small><br>${h.text}</div>`).join(""):"まだ履歴がありません。";
+}
+function renderProfile(){
+  const u=store.get("user",null);
+  $("#loginPanel").classList.toggle("hidden",!!u);$("#profilePanel").classList.toggle("hidden",!u);
+  if(u){$("#profileName").textContent=u.name;$("#profileEmail").textContent=u.email}
+  renderHistory();
+}
+$("#loginForm").onsubmit=e=>{
+  e.preventDefault();const u={name:$("#nickname").value,email:$("#email").value};store.set("user",u);renderProfile();alert("ログイン情報をこの端末に保存しました。");
+};
+$("#logoutBtn").onclick=()=>{localStorage.removeItem("user");renderProfile()};
+$("#dailyBonusBtn").onclick=()=>{
+  const last=store.get("lastBonus","");if(last===today()){alert("本日のボーナスは受け取り済みです。");return}
+  const yesterday=new Date(Date.now()-86400000).toISOString().slice(0,10);
+  let streak=last===yesterday?store.get("streak",0)+1:1;
+  store.set("lastBonus",today());store.set("streak",streak);points+=50+Math.min(streak*5,50);store.set("points",points);
+  updateStatus();alert(`ログインボーナスを獲得しました！ 連続${streak}日`);
+};
+
+$("#dailyMessage").textContent=pick(advice,hash(today()));
+updateStatus();renderProfile();
+
+if("serviceWorker" in navigator)navigator.serviceWorker.register("./sw.js").catch(()=>{});
+
+// 星アニメーション
+const c=$("#stars"),ctx=c.getContext("2d");let stars=[];
+function resize(){c.width=innerWidth;c.height=innerHeight;stars=Array.from({length:Math.min(120,Math.floor(innerWidth/8))},()=>({x:Math.random()*c.width,y:Math.random()*c.height,r:Math.random()*1.7+.3,v:Math.random()*.35+.08}))}
+function animate(){ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle="rgba(255,255,255,.8)";stars.forEach(s=>{s.y+=s.v;if(s.y>c.height)s.y=0;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill()});requestAnimationFrame(animate)}
+addEventListener("resize",resize);resize();animate();
