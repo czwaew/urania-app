@@ -1,16 +1,16 @@
 {
-  "name": "星しずく占い+ Ver4.0 Ultimate",
-  "short_name": "星しずくUltimate",
+  "name": "星しずく＋｜占い × 自己理解",
+  "short_name": "星しずく＋",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#130b2d",
-  "theme_color": "#1a1038",
+  "background_color": "#120b29",
+  "theme_color": "#28174f",
   "icons": [
     {
       "src": "icon.svg",
       "sizes": "any",
       "type": "image/svg+xml"
     }
-  ],
-  "description": "AI、78枚タロット、星座、姓名、数秘、九星、誕生日、相性を備えた総合占いPWA"
+  ]
 }

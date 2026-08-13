@@ -3,175 +3,236 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#1a1038">
-<title>星しずく占い+ Ver4.0 Ultimate</title>
+<meta name="theme-color" content="#28174f">
+<meta name="description" content="占い×自己理解×相談で、次の一歩を見つけるWebアプリ">
+<title>星しずく＋｜占い × 自己理解</title>
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<canvas id="sky"></canvas>
-<header class="header">
-  <div><p class="kicker">FORTUNE COLLECTION</p><h1>星しずく占い＋ <small>Ultimate</small></h1><p>AIと伝統占術で、今日の気持ちに寄り添う。</p></div>
+<canvas id="stars"></canvas>
+
+<header class="top">
+  <div>
+    <p class="eyebrow">FORTUNE × SELF DISCOVERY</p>
+    <h1>🔮 星しずく＋</h1>
+    <p>占うだけじゃない。自分を知り、気持ちを整理し、次の一歩へ。</p>
+  </div>
   <button id="themeBtn" class="round">🌙</button>
 </header>
 
 <main>
-<section class="summary panel">
-  <div><span>ポイント</span><strong id="points">150</strong></div>
-  <div><span>連続ログイン</span><strong id="streak">0日</strong></div>
-  <div><span>今日の運勢</span><strong id="dailyScore">--点</strong></div>
+<section class="hero panel">
+  <div>
+    <p class="eyebrow">今日は何を整理したいですか？</p>
+    <h2>迷いを「答え」ではなく「ヒント」に変える。</h2>
+    <p class="muted">占いをきっかけに、自分の気持ち・状況・選択肢を整理できます。</p>
+  </div>
+  <div class="hero-grid">
+    <button data-jump="daily">✨<span>今日の運勢を知りたい</span></button>
+    <button data-jump="self">🧠<span>自分をもっと知りたい</span></button>
+    <button data-jump="love">💕<span>恋愛を整理したい</span></button>
+    <button data-jump="life">🌱<span>仕事・人生を考えたい</span></button>
+  </div>
 </section>
 
 <nav class="tabs">
-<button data-view="ai">🤖 AI</button>
-<button data-view="tarot">🎴 タロット</button>
-<button data-view="zodiac">♈ 星座</button>
-<button data-view="name">📝 姓名</button>
-<button data-view="numbers">🔢 数秘</button>
-<button data-view="kyusei">九星</button>
-<button data-view="birthday">🎂 誕生日</button>
-<button data-view="compatibility">💕 相性</button>
-<button data-view="mypage">👤 マイページ</button>
+  <button data-view="home">🏠 ホーム</button>
+  <button data-view="daily">✨ 今日</button>
+  <button data-view="tarot">🎴 タロット</button>
+  <button data-view="zodiac">♈ 星座</button>
+  <button data-view="number">🔢 数秘</button>
+  <button data-view="compat">💕 相性</button>
+  <button data-view="self">🧠 自己理解</button>
+  <button data-view="love">💬 恋愛相談</button>
+  <button data-view="life">🌱 人生相談</button>
+  <button data-view="value">💎 このサービスの価値</button>
+  <button data-view="history">📚 履歴</button>
 </nav>
 
-<section id="view-ai" class="view panel">
-<h2>🤖 AI占い相談</h2>
-<p>恋愛・仕事・人生について相談できます。</p>
-<div class="quick">
-<button data-prompt="恋愛について占ってください">恋愛</button>
-<button data-prompt="仕事について占ってください">仕事</button>
-<button data-prompt="人生の方向性について占ってください">人生</button>
-<button id="dailyAiBtn">今日の運勢を生成</button>
-</div>
-<div id="chatLog" class="chat"></div>
-<form id="chatForm" class="chatForm">
-<select id="consultType"><option>総合</option><option>恋愛</option><option>仕事</option><option>人生</option></select>
-<input id="chatInput" placeholder="悩みや質問を入力してください" maxlength="500" required>
-<button>送信 -10pt</button>
-</form>
-<p class="note">サーバーURL未設定時は体験版AIとして動作します。本物のOpenAI API接続用サーバー見本を同梱しています。</p>
+<section id="view-home" class="view panel">
+  <div class="summary-grid">
+    <article><span>今日の総合運</span><strong id="homeScore">--点</strong></article>
+    <article><span>今日のテーマ</span><strong id="homeTheme">整える</strong></article>
+    <article><span>次の一歩</span><strong>1つ決める</strong></article>
+  </div>
+  <div class="message-box">
+    <p class="eyebrow">TODAY'S MESSAGE</p>
+    <h2 id="homeMessage">小さな一歩が流れを変える日。</h2>
+    <p>占い結果の最後には、今日できる具体的な行動を表示します。</p>
+  </div>
+</section>
+
+<section id="view-daily" class="view panel hidden">
+  <p class="eyebrow">DAILY FORTUNE</p>
+  <h2>✨ 今日の運勢</h2>
+  <button id="dailyBtn">今日の運勢を見る</button>
+  <div id="dailyResult" class="result"></div>
 </section>
 
 <section id="view-tarot" class="view panel hidden">
-<h2>🎴 78枚フルデッキ</h2>
-<div class="quick">
-<button data-draw="1">1枚引き -5pt</button>
-<button data-draw="3">3枚引き -15pt</button>
-<button data-draw="10">ケルト十字 -30pt</button>
-</div>
-<div id="spreadLabels" class="spreadLabels"></div>
-<div id="tarotResult" class="tarotGrid"></div>
-<details><summary>カード図鑑（78枚）</summary><div id="library" class="library"></div></details>
+  <p class="eyebrow">TAROT</p>
+  <h2>🎴 1枚タロット</h2>
+  <p class="muted">「今見るべき視点」を1枚のカードから受け取ります。</p>
+  <button id="tarotBtn">カードを引く</button>
+  <div id="tarotResult" class="result"></div>
 </section>
 
 <section id="view-zodiac" class="view panel hidden">
-<h2>♈ 星座占い</h2>
-<form id="zodiacForm" class="formGrid">
-<label>星座<select id="zodiac"></select></label>
-<label>期間<select id="period"><option>今日</option><option>週間</option><option>月間</option></select></label>
-<button>占う</button>
-</form><div id="zodiacResult" class="result"></div>
-</section>
-
-<section id="view-name" class="view panel hidden">
-<h2>📝 姓名判断</h2>
-<form id="nameForm" class="formGrid"><label>お名前<input id="fullName" required></label><button>判断する</button></form>
-<div id="nameResult" class="result"></div>
-</section>
-
-<section id="view-numbers" class="view panel hidden">
-<h2>🔢 数秘術</h2>
-<form id="numberForm" class="formGrid"><label>生年月日<input id="numberBirth" type="date" required></label><label>お名前<input id="numberName"></label><button>計算する</button></form>
-<div id="numberResult" class="result"></div>
-</section>
-
-<section id="view-kyusei" class="view panel hidden">
-<h2>九星気学</h2>
-<form id="kyuseiForm" class="formGrid"><label>生年月日<input id="kyuseiBirth" type="date" required></label><button>本命星を調べる</button></form>
-<div id="kyuseiResult" class="result"></div>
-</section>
-
-<section id="view-birthday" class="view panel hidden">
-<h2>🎂 誕生日占い</h2>
-<form id="birthdayForm" class="formGrid"><label>生年月日<input id="birthday" type="date" required></label><button>占う</button></form>
-<div id="birthdayResult" class="result"></div>
-</section>
-
-<section id="view-compatibility" class="view panel hidden">
-<h2>💕 相性診断</h2>
-<form id="compatForm" class="formGrid two">
-<label>あなたの名前<input id="nameA" required></label><label>あなたの生年月日<input id="birthA" type="date" required></label>
-<label>相手の名前<input id="nameB" required></label><label>相手の生年月日<input id="birthB" type="date" required></label>
-<label>関係<select id="relation"><option>恋愛</option><option>結婚</option><option>友達</option><option>仕事</option></select></label>
-<button>相性を見る</button>
-</form><div id="compatResult" class="result"></div>
-</section>
-
-<section id="view-mypage" class="view panel hidden">
-<h2>👤 マイページ</h2>
-
-<div id="loginBox">
-  <h3>ログイン</h3>
-  <p class="note">この体験版ではログイン情報をこの端末内だけに保存します。</p>
-  <form id="loginForm" class="formGrid">
-    <label>ニックネーム<input id="loginName" maxlength="20" required></label>
-    <label>メールアドレス<input id="loginEmail" type="email" required></label>
-    <button>ログイン情報を保存</button>
+  <p class="eyebrow">ZODIAC</p>
+  <h2>♈ 星座占い</h2>
+  <form id="zodiacForm" class="form">
+    <label>星座<select id="zodiacSelect"></select></label>
+    <label>期間<select id="zodiacPeriod"><option>今日</option><option>週間</option><option>月間</option></select></label>
+    <button>占う</button>
   </form>
-  <div class="quick">
-    <button type="button" id="googleDemo">Googleログイン（体験版）</button>
-    <button type="button" id="appleDemo">Appleログイン（体験版）</button>
-  </div>
-</div>
-
-<div id="profileBox" class="hidden">
-  <div class="profileCard">
-    <div class="avatar">✨</div>
-    <div><h3 id="profileName"></h3><p id="profileEmail" class="note"></p></div>
-  </div>
-
-  <div class="quick">
-    <button id="bonusBtn">毎日ログインボーナス</button>
-    <button id="installBtn">アプリをインストール</button>
-    <button id="premiumBtn">プレミアム会員</button>
-    <button id="logoutBtn" class="danger">ログアウト</button>
-  </div>
-
-  <div class="dashboard">
-    <div><span>保有ポイント</span><strong id="mypagePoints">0 pt</strong></div>
-    <div><span>お気に入り</span><strong id="favoriteCount">0件</strong></div>
-    <div><span>実績バッジ</span><strong id="badgeCount">0個</strong></div>
-  </div>
-
-  <h3>実績・ミッション</h3>
-  <div id="missions" class="missions"></div>
-
-  <h3>お気に入り</h3>
-  <div id="favorites" class="history"></div>
-
-  <h3>会話・占い履歴</h3>
-  <div class="quick"><button id="clearHistory" class="danger">履歴削除</button></div>
-  <div id="history" class="history"></div>
-</div>
+  <div id="zodiacResult" class="result"></div>
 </section>
 
-<aside class="ad panel" id="adArea">
-      <span>広告スペース</span>
-      <strong>Google AdSense / AdMob 広告コード差し替え位置</strong>
-      <small>プレミアム会員では広告非表示にできます。</small>
-    </aside>
-    <section class="panel monetization">
-      <h2>💎 プレミアム機能</h2>
-      <div class="premiumGrid">
-        <article><h3>広告非表示</h3><p>広告を外して快適に利用</p></article>
-        <article><h3>AI回数追加</h3><p>AI相談の利用回数を追加</p></article>
-        <article><h3>特別タロット</h3><p>限定カードデザインを追加</p></article>
-      </div>
-      <button id="stripeDemo">Stripe決済（体験版）</button>
-    </section>
+<section id="view-number" class="view panel hidden">
+  <p class="eyebrow">NUMEROLOGY</p>
+  <h2>🔢 数秘術</h2>
+  <form id="numberForm" class="form">
+    <label>生年月日<input id="birthday" type="date" required></label>
+    <button>自分の傾向を見る</button>
+  </form>
+  <div id="numberResult" class="result"></div>
+</section>
+
+<section id="view-compat" class="view panel hidden">
+  <p class="eyebrow">COMPATIBILITY</p>
+  <h2>💕 相性診断</h2>
+  <form id="compatForm" class="form">
+    <label>あなたの名前<input id="nameA" required></label>
+    <label>相手の名前<input id="nameB" required></label>
+    <button>相性を見る</button>
+  </form>
+  <div id="compatResult" class="result"></div>
+</section>
+
+<section id="view-self" class="view panel hidden">
+  <p class="eyebrow">SELF DISCOVERY</p>
+  <h2>🧠 自己理解ミニ診断</h2>
+  <p class="muted">5問から、強み・注意点・向いている行動を整理します。</p>
+  <div id="quiz"></div>
+  <button id="quizBtn" class="wide">診断する</button>
+  <div id="quizResult" class="result"></div>
+</section>
+
+<section id="view-love" class="view panel hidden">
+  <p class="eyebrow">LOVE CONSULTATION</p>
+  <h2>💬 恋愛相談</h2>
+  <form id="loveForm" class="form">
+    <label>今の関係
+      <select id="loveRelation"><option>片思い</option><option>交際中</option><option>友達</option><option>復縁を考えている</option><option>結婚を考えている</option></select>
+    </label>
+    <label>今いちばん気になること<textarea id="loveConcern" maxlength="500" required></textarea></label>
+    <button>気持ちを整理する</button>
+  </form>
+  <div id="loveResult" class="result"></div>
+</section>
+
+<section id="view-life" class="view panel hidden">
+  <p class="eyebrow">LIFE CONSULTATION</p>
+  <h2>🌱 人生・仕事相談</h2>
+  <form id="lifeForm" class="form">
+    <label>相談テーマ<select id="lifeTheme"><option>仕事</option><option>転職</option><option>人間関係</option><option>家族</option><option>将来</option><option>目標</option></select></label>
+    <label>今の状況<textarea id="lifeSituation" maxlength="700" required></textarea></label>
+    <label>理想の状態<textarea id="lifeIdeal" maxlength="500" required></textarea></label>
+    <button>状況を整理する</button>
+  </form>
+  <div id="lifeResult" class="result"></div>
+</section>
+
+<section id="view-value" class="view panel hidden">
+  <p class="eyebrow">VALUE PROPOSITION</p>
+  <h2>💎 このサービスが解決すること</h2>
+
+  <div class="value-grid">
+    <article class="pain">
+      <span>PAIN</span>
+      <h3>利用者の悩み</h3>
+      <ul>
+        <li>誰にも相談できない</li>
+        <li>恋愛や仕事でどう動けばいいか分からない</li>
+        <li>自分のことがよく分からない</li>
+        <li>占い結果が短く、行動につながらない</li>
+        <li>複数サイトを行き来するのが面倒</li>
+      </ul>
+    </article>
+
+    <article class="reliever">
+      <span>PAIN RELIEVER</span>
+      <h3>悩みを軽くする仕組み</h3>
+      <ul>
+        <li>占いと相談機能を1つに統合</li>
+        <li>結果の最後に「次の一歩」を表示</li>
+        <li>恋愛・仕事・人生の状況整理</li>
+        <li>履歴保存で振り返り可能</li>
+        <li>スマホですぐ使える</li>
+      </ul>
+    </article>
+
+    <article class="gain">
+      <span>GAIN</span>
+      <h3>利用者が得たいもの</h3>
+      <ul>
+        <li>気持ちが整理された感覚</li>
+        <li>自分の強みや傾向への理解</li>
+        <li>安心感と前向きなヒント</li>
+        <li>毎日楽しめる習慣</li>
+        <li>次に何をすればいいか分かること</li>
+      </ul>
+    </article>
+
+    <article class="creator">
+      <span>GAIN CREATOR</span>
+      <h3>満足を高める仕組み</h3>
+      <ul>
+        <li>占い × 自己分析の総合コメント</li>
+        <li>今日の行動提案</li>
+        <li>相性だけでなく関係改善ヒント</li>
+        <li>過去結果の履歴</li>
+        <li>継続利用しやすい今日の運勢</li>
+      </ul>
+    </article>
+  </div>
+
+  <div class="bmc">
+    <p class="eyebrow">BUSINESS MODEL CANVAS</p>
+    <h2>ビジネスモデルキャンバス</h2>
+    <div class="bmc-grid">
+      <article><strong>顧客</strong><p>占い好き、自己分析層、恋愛相談層、仕事・人間関係・人生相談層</p></article>
+      <article><strong>価値提案</strong><p>占いを通じて気持ちを整理し、自己理解と次の行動につなげる</p></article>
+      <article><strong>チャネル</strong><p>Webアプリ、PWA、SNS、検索</p></article>
+      <article><strong>顧客関係</strong><p>毎日運勢、履歴、相談、振り返り</p></article>
+      <article><strong>収益源</strong><p>広告、プレミアム会員、詳細診断、AI相談</p></article>
+      <article><strong>主要活動</strong><p>診断改善、コンテンツ更新、UX改善、集客</p></article>
+      <article><strong>主要リソース</strong><p>診断ロジック、占術データ、Webアプリ、AI</p></article>
+      <article><strong>パートナー</strong><p>AI、広告、決済、クラウドサービス</p></article>
+      <article><strong>コスト</strong><p>AI API、サーバー、決済、ドメイン、広告</p></article>
+    </div>
+  </div>
+</section>
+
+<section id="view-history" class="view panel hidden">
+  <p class="eyebrow">HISTORY</p>
+  <h2>📚 履歴</h2>
+  <div class="actions">
+    <button id="exportBtn">履歴を書き出す</button>
+    <button id="clearBtn" class="danger">履歴を削除</button>
+  </div>
+  <div id="historyList" class="history"></div>
+</section>
+
+<aside class="panel appeal">
+  <p class="eyebrow">MESSAGE</p>
+  <h2>自分を知る。気持ちを整理する。次の一歩を決める。</h2>
+  <p>このアプリは「当てる占い」だけではなく、「考えるきっかけをつくる占い」を目指しています。</p>
+</aside>
 </main>
-<footer>占いは娯楽・自己理解の参考としてお楽しみください。</footer>
-<script src="config.js"></script>
-<script src="tarot-data.js"></script>
+
+<footer>© 2026 星しずく＋｜占いは娯楽・自己理解の参考としてお楽しみください。</footer>
 <script src="app.js"></script>
-</body></html>
+</body>
+</html>
